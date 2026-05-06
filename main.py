@@ -34,7 +34,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "identity",
     "Connection": "keep-alive",
     "Accept-Encoding": "identity"
 }
@@ -134,9 +134,9 @@ def scrape_propertypro():
         try:
             print(f"Scraping: {url}")
             r = requests.get(url, headers=HEADERS, timeout=20)
-            print(f"Status: {r.status_code}")
             r.encoding = 'utf-8'
-soup = BeautifulSoup(r.text, "lxml")
+            print(f"Status: {r.status_code}")
+            soup = BeautifulSoup(r.text, "lxml")
 
             cards = (
                 soup.find_all("div", class_="listings-property") or
@@ -225,9 +225,9 @@ def scrape_jiji():
         try:
             print(f"Scraping Jiji: {url}")
             r = requests.get(url, headers=HEADERS, timeout=20)
-            print(f"Jiji Status: {r.status_code}")
             r.encoding = 'utf-8'
-soup = BeautifulSoup(r.text, "lxml")
+            print(f"Jiji Status: {r.status_code}")
+            soup = BeautifulSoup(r.text, "lxml")
 
             cards = (
                 soup.find_all("div", class_="b-list-advert__item-wrapper") or
