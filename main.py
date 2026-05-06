@@ -124,63 +124,75 @@ Respond in this exact JSON format only, no extra text:
 def scrape_propertypro():
     listings = []
     urls = [
-        "https://www.propertypro.ng/property-for-sale/lagos",
-        "https://www.propertypro.ng/property-for-rent/lagos",
-        "https://www.propertypro.ng/property-for-sale/abuja",
-        "https://www.propertypro.ng/property-for-rent/abuja",
+        "https://nigeriapropertycentre.com/for-sale/houses/lagos",
+        "https://nigeriapropertycentre.com/for-rent/houses/lagos",
+        "https://nigeriapropertycentre.com/for-sale/houses/abuja",
+        "https://nigeriapropertycentre.com/for-rent/houses/abuja",
     ]
 
     for url in urls:
         try:
             print(f"Scraping: {url}")
-            r = requests.get(url, headers=HEADERS, timeout=20)
+            session = requests.Session()
+            session.headers.update({
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "identity",
+                "Referer": "https://www.google.com/",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1"
+            })
+            r = session.get(url, timeout=20)
             r.encoding = 'utf-8'
             print(f"Status: {r.status_code}")
+
+            if r.status_code != 200:
+                print(f"Blocked: {r.status_code}")
+                continue
+
             soup = BeautifulSoup(r.text, "lxml")
 
             cards = (
-                soup.find_all("div", class_="listings-property") or
-                soup.find_all("div", class_="single-room-sale") or
+                soup.find_all("div", class_="property-list") or
+                soup.find_all("div", class_="wp-block") or
                 soup.find_all("article") or
-                soup.find_all("div", class_="col-md-4") or
-                soup.find_all("div", attrs={"data-id": True})
+                soup.find_all("div", class_="col-sm-6") or
+                soup.find_all("div", class_="listing")
             )
 
-            print(f"Found {len(cards)} cards on {url}")
+            print(f"Found {len(cards)} cards")
 
-            for card in cards[:6]:
+            for card in cards[:8]:
                 try:
                     title_el = (
                         card.find("h4") or
                         card.find("h3") or
                         card.find("h2") or
-                        card.find(class_="listings-property-title") or
-                        card.find(class_="title")
+                        card.find(class_="content-title")
                     )
                     title = title_el.get_text(strip=True) if title_el else ""
                     if not title or len(title) < 5:
                         continue
 
                     price_el = (
-                        card.find(class_="listings-price") or
                         card.find(class_="price") or
-                        card.find("h3") or
-                        card.find(string=lambda t: t and "₦" in t)
+                        card.find(class_="listed-price") or
+                        card.find("h3")
                     )
                     price = price_el.get_text(strip=True) if price_el else "Price on request"
 
                     location_el = (
-                        card.find("address") or
-                        card.find(class_="lp-title") or
                         card.find(class_="location") or
-                        card.find(class_="listings-property-location")
+                        card.find("address") or
+                        card.find(class_="added-on")
                     )
                     location = location_el.get_text(strip=True) if location_el else "Lagos"
 
                     link_el = card.find("a", href=True)
                     if link_el:
                         href = link_el["href"]
-                        link = "https://www.propertypro.ng" + href if href.startswith("/") else href
+                        link = "https://nigeriapropertycentre.com" + href if href.startswith("/") else href
                     else:
                         link = url
 
@@ -196,7 +208,7 @@ def scrape_propertypro():
                         "link": link,
                         "description": description,
                         "type": listing_type,
-                        "source": "PropertyPro"
+                        "source": "NigeriaPropertyCentre"
                     })
                     print(f"✅ Got: {title[:40]}")
 
@@ -207,7 +219,7 @@ def scrape_propertypro():
             time.sleep(3)
 
         except Exception as e:
-            print(f"PropertyPro error: {e}")
+            print(f"Scrape error: {e}")
             continue
 
     return listings
