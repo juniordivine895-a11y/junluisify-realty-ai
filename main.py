@@ -567,6 +567,35 @@ https://flutterwave.com/pay/sec3jwuetm6l
             time.sleep(5)
 
 # ============ FLASK ============
+@app.route('/debug')
+def debug():
+    try:
+        r = requests.get(
+            "https://www.propertypro.ng/property-for-sale/lagos",
+            headers=HEADERS,
+            timeout=20
+        )
+        r.encoding = 'utf-8'
+        soup = BeautifulSoup(r.text, "lxml")
+        
+        # Get all div classes on the page
+        divs = soup.find_all("div", limit=20)
+        classes = []
+        for d in divs:
+            if d.get("class"):
+                classes.append(str(d.get("class")))
+        
+        return f"""
+        <h2>Debug Info</h2>
+        <p>Status: {r.status_code}</p>
+        <p>Page length: {len(r.text)}</p>
+        <h3>First 20 div classes found:</h3>
+        <pre>{"<br>".join(classes)}</pre>
+        <h3>Raw HTML sample:</h3>
+        <pre>{r.text[2000:4000]}</pre>
+        """
+    except Exception as e:
+        return f"Error: {e}"
 @app.route('/')
 def home():
     stats = load_stats()
