@@ -30,15 +30,6 @@ DIRECT_MANDATE_KEYWORDS = [
 SEEN_FILE = "seen_listings.json"
 STATS_FILE = "stats.json"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "identity",
-    "Connection": "keep-alive",
-    "Accept-Encoding": "identity"
-}
-
 # ============ STATS ============
 def load_stats():
     if os.path.exists(STATS_FILE):
@@ -97,7 +88,6 @@ def analyze_with_gemini(listing):
 Property: {listing['title']}
 Location: {listing['location']}
 Price: {listing['price']}
-Description: {listing.get('description', 'N/A')}
 
 Respond in this exact JSON format only, no extra text:
 {{
@@ -120,110 +110,6 @@ Respond in this exact JSON format only, no extra text:
             "tip": "Contact the agent quickly before other buyers do"
         }
 
-# ============ SCRAPER — PROPERTYPRO ============
-def scrape_propertypro():
-    listings = []
-    urls = [
-        "https://nigeriapropertycentre.com/for-sale/houses/lagos",
-        "https://nigeriapropertycentre.com/for-rent/houses/lagos",
-        "https://nigeriapropertycentre.com/for-sale/houses/abuja",
-        "https://nigeriapropertycentre.com/for-rent/houses/abuja",
-    ]
-
-    for url in urls:
-        try:
-            print(f"Scraping: {url}")
-            session = requests.Session()
-            session.headers.update({
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept-Encoding": "identity",
-                "Referer": "https://www.google.com/",
-                "Connection": "keep-alive",
-                "Upgrade-Insecure-Requests": "1"
-            })
-            r = session.get(url, timeout=20)
-            r.encoding = 'utf-8'
-            print(f"Status: {r.status_code}")
-
-            if r.status_code != 200:
-                print(f"Blocked: {r.status_code}")
-                continue
-
-            soup = BeautifulSoup(r.text, "lxml")
-
-            cards = (
-                soup.find_all("div", class_="property-list") or
-                soup.find_all("div", class_="wp-block") or
-                soup.find_all("article") or
-                soup.find_all("div", class_="col-sm-6") or
-                soup.find_all("div", class_="listing")
-            )
-
-            print(f"Found {len(cards)} cards")
-
-            for card in cards[:8]:
-                try:
-                    title_el = (
-                        card.find("h4") or
-                        card.find("h3") or
-                        card.find("h2") or
-                        card.find(class_="content-title")
-                    )
-                    title = title_el.get_text(strip=True) if title_el else ""
-                    if not title or len(title) < 5:
-                        continue
-
-                    price_el = (
-                        card.find(class_="price") or
-                        card.find(class_="listed-price") or
-                        card.find("h3")
-                    )
-                    price = price_el.get_text(strip=True) if price_el else "Price on request"
-
-                    location_el = (
-                        card.find(class_="location") or
-                        card.find("address") or
-                        card.find(class_="added-on")
-                    )
-                    location = location_el.get_text(strip=True) if location_el else "Lagos"
-
-                    link_el = card.find("a", href=True)
-                    if link_el:
-                        href = link_el["href"]
-                        link = "https://nigeriapropertycentre.com" + href if href.startswith("/") else href
-                    else:
-                        link = url
-
-                    desc_el = card.find("p")
-                    description = desc_el.get_text(strip=True) if desc_el else ""
-
-                    listing_type = "For Sale" if "sale" in url else "For Rent"
-
-                    listings.append({
-                        "title": title,
-                        "price": price,
-                        "location": location,
-                        "link": link,
-                        "description": description,
-                        "type": listing_type,
-                        "source": "NigeriaPropertyCentre"
-                    })
-                    print(f"✅ Got: {title[:40]}")
-
-                except Exception as e:
-                    print(f"Card error: {e}")
-                    continue
-
-            time.sleep(3)
-
-        except Exception as e:
-            print(f"Scrape error: {e}")
-            continue
-
-    return listings
-
 # ============ SCRAPER — JIJI ============
 def scrape_jiji():
     listings = []
@@ -231,27 +117,45 @@ def scrape_jiji():
         "https://jiji.ng/lagos/houses-apartments-for-rent",
         "https://jiji.ng/lagos/houses-apartments-for-sale",
         "https://jiji.ng/abuja/houses-apartments-for-rent",
+        "https://jiji.ng/abuja/houses-apartments-for-sale",
     ]
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-A217F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "identity",
+        "Referer": "https://www.google.com/",
+        "Connection": "keep-alive"
+    }
 
     for url in urls:
         try:
             print(f"Scraping Jiji: {url}")
-            r = requests.get(url, headers=HEADERS, timeout=20)
+            r = requests.get(url, headers=headers, timeout=25)
             r.encoding = 'utf-8'
-            print(f"Jiji Status: {r.status_code}")
+            print(f"Jiji Status: {r.status_code} | Length: {len(r.text)}")
+
+            if r.status_code != 200:
+                print(f"Blocked on {url}")
+                continue
+
             soup = BeautifulSoup(r.text, "lxml")
 
-            cards = (
-                soup.find_all("div", class_="b-list-advert__item-wrapper") or
-                soup.find_all("article", class_="b-list-advert-base") or
-                soup.find_all("div", class_="qa-advert-list-item") or
-                soup.find_all("li", class_="b-list-advert__item")
-            )
+            # Try all possible Jiji card selectors
+            cards = soup.find_all("div", class_="b-list-advert__item-wrapper")
+            if not cards:
+                cards = soup.find_all("article")
+            if not cards:
+                cards = soup.find_all("li", class_="b-list-advert__item")
+            if not cards:
+                cards = soup.find_all("div", attrs={"data-qa": "advert"})
 
-            print(f"Jiji cards: {len(cards)}")
+            print(f"Jiji cards found: {len(cards)}")
 
-            for card in cards[:6]:
+            for card in cards[:8]:
                 try:
+                    # Title
                     title_el = (
                         card.find(class_="b-advert-title-inner") or
                         card.find("h3") or
@@ -262,20 +166,23 @@ def scrape_jiji():
                     if not title or len(title) < 5:
                         continue
 
+                    # Price
                     price_el = (
                         card.find(class_="b-advert-price__converted") or
-                        card.find(class_="price") or
-                        card.find(class_="b-advert-price")
+                        card.find(class_="b-advert-price") or
+                        card.find(class_="price")
                     )
                     price = price_el.get_text(strip=True) if price_el else "Price on request"
 
+                    # Location
                     location_el = (
                         card.find(class_="b-list-advert__region__text") or
-                        card.find(class_="region-name") or
-                        card.find(class_="b-advert-location")
+                        card.find(class_="b-advert-location") or
+                        card.find(class_="region-name")
                     )
                     location = location_el.get_text(strip=True) if location_el else "Lagos"
 
+                    # Link
                     link_el = card.find("a", href=True)
                     if link_el:
                         href = link_el["href"]
@@ -340,7 +247,7 @@ JunLuisify Realty AI sends you:
 📍 Lagos & Abuja coverage
 🤖 AI validates every listing
 
-1000s of agents are already using AI — don't get left behind!
+Don't get left behind!
 
 👇 Join FREE today
 {free_link}
@@ -353,10 +260,10 @@ Imagine waking up to HOT property leads already in your Telegram!
 
 That's exactly what JunLuisify Realty AI does for Nigerian agents!
 
-🔍 Scans PropertyPro & Jiji automatically
-🤖 AI removes fake & stale listings
+🔍 Scans Jiji.ng automatically
+🤖 AI removes fake listings
 🥇 Flags Direct Mandate properties
-💰 Only ₦5,000/month — less than one commission!
+💰 Only ₦5,000/month
 
 Try our FREE channel first 👇
 {free_link}
@@ -425,17 +332,12 @@ def run_bot():
     stats = load_stats()
     seen = load_seen()
 
-    listings = scrape_propertypro()
-    print(f"PropertyPro: {len(listings)} listings")
-
-    jiji_listings = scrape_jiji()
-    print(f"Jiji: {len(jiji_listings)} listings")
-
-    listings.extend(jiji_listings)
-    print(f"📦 Total: {len(listings)} listings found")
+    listings = scrape_jiji()
+    print(f"📦 Total listings found: {len(listings)}")
 
     if not listings:
         print("⚠️ No listings found this run")
+        send_telegram(FREE_CHANNEL_ID, "⚠️ Scanner ran but found no new listings this cycle. Will try again in 3 hours!")
         return
 
     new_count = 0
@@ -501,7 +403,7 @@ def handle_commands():
                 if text == "/start":
                     send_telegram(chat_id, """🏠 <b>Welcome to JunLuisify Realty AI!</b>
 
-I scan PropertyPro.ng and Jiji.ng every 3 hours and find the hottest property deals in Lagos and Abuja automatically!
+I scan Jiji.ng every 3 hours and find the hottest property deals in Lagos and Abuja automatically!
 
 <b>Commands:</b>
 /start — Show this message
@@ -524,7 +426,7 @@ https://flutterwave.com/pay/sec3jwuetm6l
 ⏰ Last Scan: {stats['last_scan']}
 📡 Scanning every 3 hours
 🌍 Covering: Lagos & Abuja
-🌐 Sources: PropertyPro + Jiji
+🌐 Source: Jiji.ng
 
 <i>— JunLuisify Real Estate AI 🏠</i>""")
 
@@ -540,7 +442,6 @@ https://flutterwave.com/pay/sec3jwuetm6l
 🥇 Gold Leads Found: {stats['gold_leads']}
 ⏰ Last Scan: {stats['last_scan']}
 📡 Next Scan: Every 3 hours
-🌐 Sources: PropertyPro + Jiji
 
 <i>— JunLuisify Real Estate AI 🏠</i>""")
 
@@ -562,7 +463,6 @@ https://flutterwave.com/pay/sec3jwuetm6l
 ✅ Full owner/agent contact details
 ✅ Direct Mandate GOLD leads
 ✅ AI scored — HOT deals only
-✅ Sources: PropertyPro + Jiji
 ✅ Posted every 3 hours automatically
 
 💰 <b>₦5,000/month only!</b>
@@ -579,35 +479,6 @@ https://flutterwave.com/pay/sec3jwuetm6l
             time.sleep(5)
 
 # ============ FLASK ============
-@app.route('/debug')
-def debug():
-    try:
-        r = requests.get(
-            "https://www.propertypro.ng/property-for-sale/lagos",
-            headers=HEADERS,
-            timeout=20
-        )
-        r.encoding = 'utf-8'
-        soup = BeautifulSoup(r.text, "lxml")
-        
-        # Get all div classes on the page
-        divs = soup.find_all("div", limit=20)
-        classes = []
-        for d in divs:
-            if d.get("class"):
-                classes.append(str(d.get("class")))
-        
-        return f"""
-        <h2>Debug Info</h2>
-        <p>Status: {r.status_code}</p>
-        <p>Page length: {len(r.text)}</p>
-        <h3>First 20 div classes found:</h3>
-        <pre>{"<br>".join(classes)}</pre>
-        <h3>Raw HTML sample:</h3>
-        <pre>{r.text[2000:4000]}</pre>
-        """
-    except Exception as e:
-        return f"Error: {e}"
 @app.route('/')
 def home():
     stats = load_stats()
@@ -619,6 +490,39 @@ def home():
     <p>⏰ Last Scan: {stats['last_scan']}</p>
     """
 
+@app.route('/debug')
+def debug():
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-A217F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.144 Mobile Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "identity",
+            "Referer": "https://www.google.com/",
+            "Connection": "keep-alive"
+        }
+        r = requests.get(
+            "https://jiji.ng/lagos/houses-apartments-for-rent",
+            headers=headers,
+            timeout=20
+        )
+        r.encoding = 'utf-8'
+        soup = BeautifulSoup(r.text, "lxml")
+        divs = soup.find_all("div", limit=30)
+        classes = []
+        for d in divs:
+            if d.get("class"):
+                classes.append(str(d.get("class")))
+        return f"""
+        <h2>Debug Info</h2>
+        <p>Status: {r.status_code}</p>
+        <p>Page length: {len(r.text)}</p>
+        <h3>Div classes found:</h3>
+        <pre>{"<br>".join(classes)}</pre>
+        """
+    except Exception as e:
+        return f"Error: {e}"
+
 # ============ START ============
 def start_scheduler():
     run_bot()
@@ -628,7 +532,7 @@ def start_scheduler():
         time.sleep(60)
 
 print("🏠 JunLuisify Realty AI Bot Starting...")
-print("✅ Scraping PropertyPro + Jiji!")
+print("✅ Scraping Jiji.ng!")
 print("✅ Commands active!")
 
 Thread(target=start_scheduler).start()
