@@ -164,10 +164,12 @@ def scrape_propertypro():
                         continue
 
                     price_el = (
-                        card.find(class_="listings-price") or
-                        card.find(class_="price") or
-                        card.find("h3")
-                    )
+    card.find(class_="listings-price") or
+    card.find(class_="price") or
+    card.find(class_="amount") or
+    card.find(class_="property-price") or
+    card.find(string=lambda t: t and "₦" in str(t))
+)
                     price = price_el.get_text(strip=True) if price_el else "Price on request"
 
                     location_el = (
