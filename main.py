@@ -580,17 +580,16 @@ def debug():
         if not r:
             return "Fetch failed!"
         soup = BeautifulSoup(r.text, "lxml")
-        divs = soup.find_all("div", limit=60)
-        classes = []
-        for d in divs:
-            if d.get("class"):
-                classes.append(str(d.get("class")))
+        cards = soup.find_all("div", class_="property-listing")
+        if not cards:
+            cards = soup.find_all("div", class_="property-listing-grid")
+        output = []
+        for i, card in enumerate(cards[:3]):
+            output.append(f"<h3>Card {i+1}</h3>")
+            output.append(f"<pre>{card.prettify()[:2000]}</pre>")
         return f"""
-        <h2>Debug Info</h2>
-        <p>Status: {r.status_code}</p>
-        <p>Page length: {len(r.text)}</p>
-        <h3>Div classes found:</h3>
-        <pre>{"<br>".join(classes)}</pre>
+        <h2>Debug — Cards Found: {len(cards)}</h2>
+        {"".join(output)}
         """
     except Exception as e:
         return f"Error: {e}"
