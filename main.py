@@ -143,11 +143,9 @@ def scrape_propertypro():
             soup = BeautifulSoup(r.text, "lxml")
 
             cards = (
-    soup.find_all("div", class_="listings-property") or
-    soup.find_all("div", class_="col-12") or
-    soup.find_all("div", class_="container") or
-    soup.find_all("article") or
-    soup.find_all("div", attrs={"data-id": True})
+    soup.find_all("div", class_="property-listing") or
+    soup.find_all("div", class_="property-listing-grid") or
+    soup.find_all("div", class_="listings-property")
 )
 
             print(f"PropertyPro cards: {len(cards)}")
