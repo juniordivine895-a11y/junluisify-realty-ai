@@ -143,12 +143,12 @@ def scrape_propertypro():
             soup = BeautifulSoup(r.text, "lxml")
 
             cards = (
-                soup.find_all("div", class_="listings-property") or
-                soup.find_all("div", class_="single-room-sale") or
-                soup.find_all("article") or
-                soup.find_all("div", class_="col-md-4") or
-                soup.find_all("div", attrs={"data-id": True})
-            )
+    soup.find_all("div", class_="listings-property") or
+    soup.find_all("div", class_="col-12") or
+    soup.find_all("div", class_="container") or
+    soup.find_all("article") or
+    soup.find_all("div", attrs={"data-id": True})
+)
 
             print(f"PropertyPro cards: {len(cards)}")
 
@@ -582,7 +582,7 @@ def debug():
         if not r:
             return "Fetch failed!"
         soup = BeautifulSoup(r.text, "lxml")
-        divs = soup.find_all("div", limit=30)
+        divs = soup.find_all("div", limit=60)
         classes = []
         for d in divs:
             if d.get("class"):
