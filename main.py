@@ -629,6 +629,25 @@ https://flutterwave.com/pay/sec3jwuetm6l
             time.sleep(5)
 
 # ============ FLASK ============
+@app.route('/test-twitter')
+def test_twitter():
+    try:
+        from requests_oauthlib import OAuth1
+        auth = OAuth1(
+            TWITTER_API_KEY,
+            TWITTER_API_SECRET,
+            TWITTER_ACCESS_TOKEN,
+            TWITTER_ACCESS_SECRET
+        )
+        tweet = "🏠 Test tweet from JunLuisify Realty AI bot! Lagos property leads 24/7 🤖 #LagosRealEstate"
+        response = requests.post(
+            "https://api.twitter.com/2/tweets",
+            json={"text": tweet},
+            auth=auth
+        )
+        return f"Status: {response.status_code} | Response: {response.text}"
+    except Exception as e:
+        return f"Error: {e}"
 @app.route('/')
 def home():
     stats = load_stats()
