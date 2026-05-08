@@ -8,7 +8,6 @@ import json
 import os
 import pytz
 import random
-import tweepy
 from datetime import datetime
 
 app = Flask(__name__)
@@ -97,20 +96,13 @@ def is_direct_mandate(text):
 # ============ TWITTER ============
 def post_to_twitter(listing, ai_result, is_gold):
     try:
-        client = tweepy.Client(
-            consumer_key=TWITTER_API_KEY,
-            consumer_secret=TWITTER_API_SECRET,
-            access_token=TWITTER_ACCESS_TOKEN,
-            access_token_secret=TWITTER_ACCESS_SECRET
-        )
-
         badge = "🔥🔥 GOLD DEAL" if is_gold else "🔥 HOT DEAL"
         gold_line = "⭐ DIRECT FROM OWNER!\n" if is_gold else ""
 
         tweet = f"""🏠 FRESH PROPERTY LEAD — Lagos!
 
 📍 {listing['location']}
-🏡 {listing['title'][:60]}
+🏡 {listing['title'][:50]}
 💰 {listing['price']}
 📊 {badge}
 {gold_line}
@@ -118,15 +110,34 @@ def post_to_twitter(listing, ai_result, is_gold):
 💳 https://flutterwave.com/pay/sec3jwuetm6l
 
 #LagosRealEstate #NigeriaProperty
-#AbujaHomes #LagosHomes
-#NaijaRealEstate #PropertyNigeria
+#LagosHomes #NaijaRealEstate
 
 — @JLuisify68780 🤖🏠"""
 
         tweet = tweet[:280]
-        client.create_tweet(text=tweet)
-        print(f"✅ Tweeted: {listing['title'][:40]}")
-        return True
+
+        import requests_oauthlib
+        from requests_oauthlib import OAuth1
+
+        auth = OAuth1(
+            TWITTER_API_KEY,
+            TWITTER_API_SECRET,
+            TWITTER_ACCESS_TOKEN,
+            TWITTER_ACCESS_SECRET
+        )
+
+        response = requests.post(
+            "https://api.twitter.com/2/tweets",
+            json={"text": tweet},
+            auth=auth
+        )
+
+        if response.status_code == 201:
+            print(f"✅ Tweeted successfully!")
+            return True
+        else:
+            print(f"❌ Twitter error: {response.text}")
+            return False
 
     except Exception as e:
         print(f"Twitter error: {e}")
