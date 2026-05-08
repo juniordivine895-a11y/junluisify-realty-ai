@@ -8,6 +8,7 @@ import json
 import os
 import pytz
 import random
+import tweepy
 from datetime import datetime
 
 app = Flask(__name__)
@@ -18,6 +19,10 @@ GEMINI_KEY = "AIzaSyAQ4n57sXTOatFT7g_7jPtF4BdbjL1CZyQ"
 FREE_CHANNEL_ID = "-1003721050699"
 PAID_CHANNEL_ID = "-1003903983342"
 SCRAPER_KEY = "68f2fbe370a45e3ed3eed98d302a352a"
+TWITTER_API_KEY = "6OuDNNobc0PZKgWm9zneAsZjo"
+TWITTER_API_SECRET = "OmtE1VDSu5vRPjDdOKUehBALFJNj6GXYhnmoMk8hdKIzVmxRjd"
+TWITTER_ACCESS_TOKEN = "2045128080134381568-CLz6y3RsWnNQMf4Gm82G5sU1i9kn0L"
+TWITTER_ACCESS_SECRET = "BhBQROqwetJV04sNRS22DsmZUuMz4nL8A1dvGbMBCE1t1"
 
 TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 WAT = pytz.timezone("Africa/Lagos")
@@ -48,7 +53,7 @@ def load_stats():
     if os.path.exists(STATS_FILE):
         with open(STATS_FILE, "r") as f:
             return json.load(f)
-    return {"total_leads": 0, "gold_leads": 0, "last_scan": "Never"}
+    return {"total_leads": 0, "gold_leads": 0, "last_scan": "Never", "tweets": 0}
 
 def save_stats(stats):
     with open(STATS_FILE, "w") as f:
@@ -88,6 +93,44 @@ def send_telegram(chat_id, message):
 
 def is_direct_mandate(text):
     return any(k in text.lower() for k in DIRECT_MANDATE_KEYWORDS)
+
+# ============ TWITTER ============
+def post_to_twitter(listing, ai_result, is_gold):
+    try:
+        client = tweepy.Client(
+            consumer_key=TWITTER_API_KEY,
+            consumer_secret=TWITTER_API_SECRET,
+            access_token=TWITTER_ACCESS_TOKEN,
+            access_token_secret=TWITTER_ACCESS_SECRET
+        )
+
+        badge = "🔥🔥 GOLD DEAL" if is_gold else "🔥 HOT DEAL"
+        gold_line = "⭐ DIRECT FROM OWNER!\n" if is_gold else ""
+
+        tweet = f"""🏠 FRESH PROPERTY LEAD — Lagos!
+
+📍 {listing['location']}
+🏡 {listing['title'][:60]}
+💰 {listing['price']}
+📊 {badge}
+{gold_line}
+🔒 Full details for subscribers!
+💳 https://flutterwave.com/pay/sec3jwuetm6l
+
+#LagosRealEstate #NigeriaProperty
+#AbujaHomes #LagosHomes
+#NaijaRealEstate #PropertyNigeria
+
+— @JLuisify68780 🤖🏠"""
+
+        tweet = tweet[:280]
+        client.create_tweet(text=tweet)
+        print(f"✅ Tweeted: {listing['title'][:40]}")
+        return True
+
+    except Exception as e:
+        print(f"Twitter error: {e}")
+        return False
 
 # ============ GEMINI ============
 def analyze_with_gemini(listing):
@@ -143,10 +186,10 @@ def scrape_propertypro():
             soup = BeautifulSoup(r.text, "lxml")
 
             cards = (
-    soup.find_all("div", class_="property-listing") or
-    soup.find_all("div", class_="property-listing-grid") or
-    soup.find_all("div", class_="listings-property")
-)
+                soup.find_all("div", class_="property-listing") or
+                soup.find_all("div", class_="property-listing-grid") or
+                soup.find_all("div", class_="listings-property")
+            )
 
             print(f"PropertyPro cards: {len(cards)}")
 
@@ -164,12 +207,12 @@ def scrape_propertypro():
                         continue
 
                     price_el = (
-    card.find(class_="listings-price") or
-    card.find(class_="price") or
-    card.find(class_="amount") or
-    card.find(class_="property-price") or
-    card.find(string=lambda t: t and "₦" in str(t))
-)
+                        card.find(class_="listings-price") or
+                        card.find(class_="price") or
+                        card.find(class_="amount") or
+                        card.find(class_="property-price") or
+                        card.find(string=lambda t: t and "₦" in str(t))
+                    )
                     price = price_el.get_text(strip=True) if price_el else "Price on request"
 
                     location_el = (
@@ -431,6 +474,7 @@ def run_bot():
 
     new_count = 0
     free_posted = 0
+    twitter_posted = 0
 
     for listing in listings:
         listing_id = listing["link"]
@@ -452,6 +496,11 @@ def run_bot():
             send_telegram(FREE_CHANNEL_ID, format_free_message(listing, ai_result, gold))
             free_posted += 1
 
+        if twitter_posted < 3:
+            post_to_twitter(listing, ai_result, gold)
+            twitter_posted += 1
+            stats["tweets"] = stats.get("tweets", 0) + 1
+
         stats["total_leads"] += 1
         if gold:
             stats["gold_leads"] += 1
@@ -462,7 +511,7 @@ def run_bot():
     stats["last_scan"] = datetime.now(WAT).strftime("%H:%M WAT | %b %d, %Y")
     save_seen(seen)
     save_stats(stats)
-    print(f"✅ Done! {new_count} new leads posted\n")
+    print(f"✅ Done! {new_count} leads | {twitter_posted} tweets\n")
 
 # ============ TELEGRAM COMMANDS ============
 def handle_commands():
@@ -512,6 +561,7 @@ https://flutterwave.com/pay/sec3jwuetm6l
 📡 Scanning every 3 hours
 🌍 Covering: Lagos & Abuja
 🌐 Sources: PropertyPro + Jiji
+🐦 Twitter: Auto-posting active
 
 <i>— JunLuisify Real Estate AI 🏠</i>""")
 
@@ -525,6 +575,7 @@ https://flutterwave.com/pay/sec3jwuetm6l
 
 🏠 Total Leads Found: {stats['total_leads']}
 🥇 Gold Leads Found: {stats['gold_leads']}
+🐦 Total Tweets: {stats.get('tweets', 0)}
 ⏰ Last Scan: {stats['last_scan']}
 📡 Next Scan: Every 3 hours
 
@@ -548,6 +599,7 @@ https://flutterwave.com/pay/sec3jwuetm6l
 ✅ Full owner/agent contact details
 ✅ Direct Mandate GOLD leads
 ✅ AI scored — HOT deals only
+✅ Auto-posted to Twitter daily
 ✅ Posted every 3 hours automatically
 
 💰 <b>₦5,000/month only!</b>
@@ -572,33 +624,13 @@ def home():
     <p>✅ Bot is running!</p>
     <p>📊 Total Leads: {stats['total_leads']}</p>
     <p>🥇 Gold Leads: {stats['gold_leads']}</p>
+    <p>🐦 Total Tweets: {stats.get('tweets', 0)}</p>
     <p>⏰ Last Scan: {stats['last_scan']}</p>
     """
 
-@app.route('/debug')
-def debug():
-    try:
-        r = fetch_url("https://www.propertypro.ng/property-for-sale/lagos")
-        if not r:
-            return "Fetch failed!"
-        soup = BeautifulSoup(r.text, "lxml")
-        cards = soup.find_all("div", class_="property-listing")
-        if not cards:
-            cards = soup.find_all("div", class_="property-listing-grid")
-        output = []
-        for i, card in enumerate(cards[:3]):
-            output.append(f"<h3>Card {i+1}</h3>")
-            output.append(f"<pre>{card.prettify()[:2000]}</pre>")
-        return f"""
-        <h2>Debug — Cards Found: {len(cards)}</h2>
-        {"".join(output)}
-        """
-    except Exception as e:
-        return f"Error: {e}"
-
 # ============ START ============
 def start_scheduler():
-    run_bot()
+   run_bot()
     schedule.every(3).hours.do(run_bot)
     while True:
         schedule.run_pending()
@@ -607,6 +639,7 @@ def start_scheduler():
 print("🏠 JunLuisify Realty AI Bot Starting...")
 print("✅ ScraperAPI enabled!")
 print("✅ Scraping PropertyPro + Jiji!")
+print("✅ Twitter auto-posting active!")
 print("✅ Commands active!")
 
 Thread(target=start_scheduler).start()
