@@ -132,11 +132,13 @@ def post_to_twitter(listing, ai_result, is_gold):
             auth=auth
         )
 
+        print(f"Twitter response: {response.status_code}")
+        print(f"Twitter body: {response.text}")
         if response.status_code == 201:
             print(f"✅ Tweeted successfully!")
             return True
         else:
-            print(f"❌ Twitter error: {response.text}")
+            print(f"❌ Twitter failed: {response.status_code} — {response.text}")
             return False
 
     except Exception as e:
