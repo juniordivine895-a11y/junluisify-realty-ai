@@ -630,7 +630,7 @@ def home():
 
 # ============ START ============
 def start_scheduler():
-   run_bot()
+    run_bot()
     schedule.every(3).hours.do(run_bot)
     while True:
         schedule.run_pending()
