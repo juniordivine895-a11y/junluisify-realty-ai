@@ -651,13 +651,504 @@ def test_twitter():
 def home():
     stats = load_stats()
     return f"""
-    <h1>🏠 JunLuisify Realty AI</h1>
-    <p>✅ Bot is running!</p>
-    <p>📊 Total Leads: {stats['total_leads']}</p>
-    <p>🥇 Gold Leads: {stats['gold_leads']}</p>
-    <p>🐦 Total Tweets: {stats.get('tweets', 0)}</p>
-    <p>⏰ Last Scan: {stats['last_scan']}</p>
-    """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JunLuisify Realty AI — Nigeria's #1 Property Lead Bot</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ font-family: 'Segoe UI', sans-serif; background: #fff; color: #333; }}
+
+        /* NAVBAR */
+        nav {{
+            background: linear-gradient(135deg, #1a7a3c, #25a55a);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }}
+        .logo {{
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }}
+        .logo span {{ color: #ffb6c1; }}
+        .nav-btn {{
+            background: #ffb6c1;
+            color: #1a7a3c;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }}
+
+        /* HERO */
+        .hero {{
+            background: linear-gradient(135deg, #1a7a3c 0%, #25a55a 50%, #ffb6c1 100%);
+            padding: 60px 20px;
+            text-align: center;
+            color: white;
+        }}
+        .hero h1 {{
+            font-size: 28px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }}
+        .hero h1 span {{ color: #ffb6c1; }}
+        .hero p {{
+            font-size: 16px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }}
+        .hero-btns {{
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }}
+        .btn-primary {{
+            background: white;
+            color: #1a7a3c;
+            padding: 14px 28px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }}
+        .btn-secondary {{
+            background: #ffb6c1;
+            color: #1a7a3c;
+            padding: 14px 28px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }}
+
+        /* STATS */
+        .stats {{
+            background: #f9f9f9;
+            padding: 40px 20px;
+            text-align: center;
+        }}
+        .stats h2 {{
+            color: #1a7a3c;
+            font-size: 22px;
+            margin-bottom: 25px;
+        }}
+        .stats-grid {{
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }}
+        .stat-card {{
+            background: white;
+            border-radius: 15px;
+            padding: 20px 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            border-top: 4px solid #1a7a3c;
+            min-width: 140px;
+        }}
+        .stat-number {{
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a7a3c;
+        }}
+        .stat-label {{
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }}
+
+        /* FEATURES */
+        .features {{
+            padding: 50px 20px;
+            text-align: center;
+            background: white;
+        }}
+        .features h2 {{
+            color: #1a7a3c;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }}
+        .features-grid {{
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }}
+        .feature-card {{
+            background: linear-gradient(135deg, #f0fff4, #fff);
+            border-radius: 15px;
+            padding: 25px 20px;
+            width: 250px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e0f0e8;
+        }}
+        .feature-icon {{ font-size: 35px; margin-bottom: 12px; }}
+        .feature-card h3 {{ color: #1a7a3c; margin-bottom: 8px; font-size: 16px; }}
+        .feature-card p {{ color: #666; font-size: 14px; line-height: 1.5; }}
+
+        /* PRICING */
+        .pricing {{
+            background: linear-gradient(135deg, #fff0f3, #fff);
+            padding: 50px 20px;
+            text-align: center;
+        }}
+        .pricing h2 {{
+            color: #1a7a3c;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }}
+        .pricing-card {{
+            background: white;
+            border-radius: 20px;
+            padding: 35px 30px;
+            max-width: 350px;
+            margin: 0 auto;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.12);
+            border: 3px solid #ffb6c1;
+        }}
+        .pricing-badge {{
+            background: #ffb6c1;
+            color: #1a7a3c;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }}
+        .price {{
+            font-size: 42px;
+            font-weight: bold;
+            color: #1a7a3c;
+        }}
+        .price span {{ font-size: 18px; color: #666; }}
+        .pricing-features {{
+            list-style: none;
+            margin: 20px 0;
+            text-align: left;
+        }}
+        .pricing-features li {{
+            padding: 8px 0;
+            color: #555;
+            font-size: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }}
+        .pricing-features li::before {{
+            content: "✅ ";
+        }}
+        .btn-pay {{
+            background: linear-gradient(135deg, #1a7a3c, #25a55a);
+            color: white;
+            padding: 15px 35px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(26,122,60,0.3);
+        }}
+
+        /* HOW IT WORKS */
+        .how {{
+            padding: 50px 20px;
+            background: white;
+            text-align: center;
+        }}
+        .how h2 {{
+            color: #1a7a3c;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }}
+        .steps {{
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 800px;
+            margin: 0 auto;
+        }}
+        .step {{
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 25px 20px;
+            width: 200px;
+            position: relative;
+        }}
+        .step-num {{
+            background: #1a7a3c;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 auto 12px;
+        }}
+        .step h3 {{ color: #1a7a3c; font-size: 15px; margin-bottom: 8px; }}
+        .step p {{ color: #666; font-size: 13px; line-height: 1.5; }}
+
+        /* CTA */
+        .cta {{
+            background: linear-gradient(135deg, #1a7a3c, #25a55a);
+            padding: 50px 20px;
+            text-align: center;
+            color: white;
+        }}
+        .cta h2 {{ font-size: 24px; margin-bottom: 15px; }}
+        .cta p {{ font-size: 16px; margin-bottom: 25px; opacity: 0.9; }}
+        .cta-btns {{
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }}
+        .btn-whatsapp {{
+            background: #25D366;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }}
+        .btn-telegram {{
+            background: #0088cc;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }}
+
+        /* FOOTER */
+        footer {{
+            background: #1a1a1a;
+            color: #aaa;
+            padding: 25px 20px;
+            text-align: center;
+            font-size: 13px;
+        }}
+        footer span {{ color: #ffb6c1; }}
+
+        /* FLOATING WHATSAPP */
+        .float-wa {{
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #25D366;
+            color: white;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 999;
+        }}
+
+        /* TICKER */
+        .ticker {{
+            background: #ffb6c1;
+            color: #1a7a3c;
+            padding: 10px 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }}
+        .ticker-content {{
+            display: inline-block;
+            animation: ticker 20s linear infinite;
+            font-weight: bold;
+            font-size: 14px;
+        }}
+        @keyframes ticker {{
+            0% {{ transform: translateX(100vw); }}
+            100% {{ transform: translateX(-100%); }}
+        }}
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <div class="logo">🏠 JunLuisify <span>Realty AI</span></div>
+    <a href="https://flutterwave.com/pay/sec3jwuetm6l" class="nav-btn">Subscribe ₦5,000</a>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+    <div class="ticker-content">
+        🏠 Fresh Lagos property leads every 3 hours! &nbsp;&nbsp;&nbsp;
+        🥇 Direct Mandate GOLD leads available! &nbsp;&nbsp;&nbsp;
+        📍 Covering Lagos & Abuja 24/7! &nbsp;&nbsp;&nbsp;
+        🤖 AI-powered property scanning! &nbsp;&nbsp;&nbsp;
+        💰 Only ₦5,000/month for full access! &nbsp;&nbsp;&nbsp;
+        🔥 {stats['total_leads']}+ leads found so far!
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>Nigeria's #1 <span>AI-Powered</span><br>Real Estate Lead Bot 🏠</h1>
+    <p>Get fresh Lagos & Abuja property leads<br>delivered to your Telegram every 3 hours — automatically!</p>
+    <div class="hero-btns">
+        <a href="https://flutterwave.com/pay/sec3jwuetm6l" class="btn-primary">💳 Subscribe Now — ₦5,000/month</a>
+        <a href="https://t.me/junluisifyrealtyai" class="btn-secondary">📱 Join Free Channel</a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+    <h2>📊 Live Bot Statistics</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{stats['total_leads']}+</div>
+            <div class="stat-label">Total Leads Found</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{stats['gold_leads']}+</div>
+            <div class="stat-label">Gold Leads Found</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">3hrs</div>
+            <div class="stat-label">Scan Frequency</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Always Running</div>
+        </div>
+    </div>
+    <p style="margin-top:20px;color:#666;font-size:14px;">Last scan: {stats['last_scan']}</p>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+    <h2>🚀 Why Choose JunLuisify Realty AI?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>AI-Powered Analysis</h3>
+            <p>Every listing analysed by Gemini AI — only HOT deals reach you!</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Real-Time Alerts</h3>
+            <p>Fresh leads posted to your Telegram every 3 hours automatically!</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🥇</div>
+            <h3>Gold Mandate Leads</h3>
+            <p>Direct owner listings flagged separately — no agent commission!</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🚫</div>
+            <h3>No Ghost Listings</h3>
+            <p>Stale and fake listings filtered out automatically every scan!</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📍</div>
+            <h3>Lagos & Abuja</h3>
+            <p>Covering Nigeria's two biggest property markets simultaneously!</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Affordable Price</h3>
+            <p>Only ₦5,000/month — less than one property commission!</p>
+        </div>
+    </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing">
+    <h2>💎 Simple Pricing</h2>
+    <div class="pricing-card">
+        <div class="pricing-badge">🔥 MOST POPULAR</div>
+        <div class="price">₦5,000<span>/month</span></div>
+        <ul class="pricing-features">
+            <li>100+ fresh leads daily</li>
+            <li>Full owner contact details</li>
+            <li>Direct Mandate GOLD leads</li>
+            <li>AI scored HOT deals only</li>
+            <li>Lagos & Abuja coverage</li>
+            <li>Instant Telegram delivery</li>
+            <li>Cancel anytime</li>
+        </ul>
+        <a href="https://flutterwave.com/pay/sec3jwuetm6l" class="btn-pay">💳 Subscribe Now</a>
+    </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how">
+    <h2>⚙️ How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <h3>Subscribe</h3>
+            <p>Pay ₦5,000/month via Flutterwave — instant confirmation!</p>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <h3>Get Access</h3>
+            <p>WhatsApp us after payment — get added to PRO channel instantly!</p>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <h3>Receive Leads</h3>
+            <p>Bot posts fresh Lagos & Abuja leads to your Telegram every 3 hours!</p>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <h3>Close Deals</h3>
+            <p>Contact property owners directly and close deals faster than ever!</p>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+    <h2>🚀 Ready To Get Fresh Leads Daily?</h2>
+    <p>Join hundreds of Lagos & Abuja agents already using JunLuisify Realty AI!</p>
+    <div class="cta-btns">
+        <a href="https://flutterwave.com/pay/sec3jwuetm6l" class="btn-primary">💳 Subscribe — ₦5,000/month</a>
+        <a href="https://wa.me/2349138643885" class="btn-whatsapp">💬 WhatsApp Us</a>
+        <a href="https://t.me/junluisifyrealtyai" class="btn-telegram">📱 Free Channel</a>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <p>🏠 <span>JunLuisify Realty AI</span> — Nigeria's #1 AI Property Lead Bot</p>
+    <p style="margin-top:8px;">📍 Covering Lagos & Abuja | 🤖 Powered by Gemini AI | ⚡ 24/7 Automated</p>
+    <p style="margin-top:8px;">© 2026 JunLuisify Realty AI. All rights reserved.</p>
+</footer>
+
+<!-- FLOATING WHATSAPP -->
+<a href="https://wa.me/2349138643885" class="float-wa">💬</a>
+
+</body>
+</html>
+"""
 
 # ============ START ============
 def start_scheduler():
