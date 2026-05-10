@@ -273,10 +273,9 @@ def scrape_propertypro():
 def scrape_jiji():
     listings = []
     urls = [
-        "https://jiji.ng/lagos/houses-apartments-for-rent",
-        "https://jiji.ng/lagos/houses-apartments-for-sale",
-        "https://jiji.ng/abuja/houses-apartments-for-rent",
-    ]
+    "https://jiji.ng/lagos/houses-apartments-for-rent",
+    "https://jiji.ng/lagos/houses-apartments-for-sale",
+]
 
     for url in urls:
         try:
@@ -1153,7 +1152,7 @@ def home():
 # ============ START ============
 def start_scheduler():
     run_bot()
-    schedule.every(3).hours.do(run_bot)
+    schedule.every(6).hours.do(run_bot)
     while True:
         schedule.run_pending()
         time.sleep(60)
